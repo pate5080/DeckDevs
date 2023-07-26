@@ -20,7 +20,6 @@ package ca.sheridancollege.project;
  */
 
 import java.util.*;
-import ca.sheridancollege.project.Card.Value;
 
 
 public class UNOGame extends Game{
@@ -159,9 +158,9 @@ public class UNOGame extends Game{
         Color cardColor = card.getColor();
         Value cardValue = card.getValue();
 
-        return (cardColor == topColor || cardValue == topValue ||
+        return cardColor == topColor || cardValue == topValue ||
                 cardColor == Color.WILD || cardValue == Value.WILD ||
-                (cardColor == Color.WILD && (cardValue == Value.WILD_DRAW_FOUR)));
+                cardColor == Color.WILD && cardValue == Value.WILD_DRAW_FOUR;
     }
     
     /**
