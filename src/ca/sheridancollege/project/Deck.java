@@ -8,8 +8,13 @@ package ca.sheridancollege.project;
  *
  * @author Anshul Alpesh Patel
  */
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Collections;
+
 public class Deck {
-    private final GroupOfCards<Card> cards;
+    private GroupOfCards<Card> cards;
     
     public Deck() {
         cards = new GroupOfCards<>(108);
@@ -48,5 +53,9 @@ public class Deck {
      */
     public void shuffle() {
         cards.shuffle();
+    }
+    
+    public int size() {
+        return cards.size();
     }
 }

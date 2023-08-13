@@ -359,7 +359,6 @@ public class UNOGame extends Game{
                 System.out.println(player.getName() + " wins!");
                 break;
             }
+        }
     }
-     
-}
 }

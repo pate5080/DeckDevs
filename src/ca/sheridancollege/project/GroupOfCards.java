@@ -63,5 +63,9 @@ public class GroupOfCards<T> {
     public void shuffle() {
         Collections.shuffle(cards);
     }
+    
+    public int size(){
+        return cards.size();
+    }
 
 }
