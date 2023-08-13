@@ -96,54 +96,58 @@ public class UNOGame extends Game{
           
            // Display the player's hand
            ArrayList<Card> hand = currentPlayer.getHand();
-           System.out.println("Yout Hand: " + hand);
+           System.out.println("Your Hand: " + hand);
            
            // Check if the player can play a card
-           boolean validCardPlayed = false;
-           while (!validCardPlayed) {
-           int cardIndex = selectCardIndex(currentPlayer);
-           Card selectedCard = currentPlayer.playCard(cardIndex);
+            boolean validCardPlayed = false;
+            while (!validCardPlayed) {
+                int cardIndex = selectCardIndex(currentPlayer, topCard, deck, discardPile);
+                Card selectedCard = currentPlayer.playCard(cardIndex);
 
-           if (selectedCard == null) {
-               // Player chose not to play a card (maybe drawing a card)
-                break;
-           }
-           
-           if (isPlayable(selectedCard, topCard)) {
-                // Valid card played, update the discard pile
-                discardPile.add(selectedCard);
-               
-               if (selectedCard.getColor() == Color.WILD) {
-                   // Handle Wild cards
-                   // For simplicity, we'll allow the player to choose the new color (0 for Red, 1 for Yellow, etc.)
-                   System.out.println("Select new color: 0-Red, 1-Yellow, 2-Green, 3-Blue");
-                   Scanner scanner = new Scanner(System.in);
-                   int newColorIndex = scanner.nextInt();
-                   Color newColor = Color.values()[newColorIndex];
-                   selectedCard.setColor(newColor);
-               }
-               
-               // Handle special cards
-               handleSpecialCards(selectedCard);
-               
-               // Break out of the loop, valid card played
-                validCardPlayed = true; 
-           } else {
-               // Card is not playable, ask the player to retry
-                System.out.println("Invalid card! Please choose a card with matching color or number.");
-               // Player cannot play, draw a card
-               currentPlayer.drawCard(deck);
-           }
-           
-           // Move to the next Player
-           updateCurrentPlayerIndex();
-           
-           // Check for UNO call and upadte direction if necessary
-           handleUNOCall(currentPlayer);
-           updateDirection();
-        }
+                if (selectedCard == null) {
+                    // Player chose not to play a card (maybe drawing a card)
+                    break;
+                }
+
+                if (isPlayable(selectedCard, topCard)) {
+                    // Valid card played, update the discard pile
+                    discardPile.add(selectedCard);
+
+                    if (selectedCard.getColor() == Color.WILD) {
+                        // Handle Wild cards
+                        // For simplicity, we'll allow the player to choose the new color (0 for Red, 1 for Yellow, etc.)
+                        System.out.println("Select new color: 0-Red, 1-Yellow, 2-Green, 3-Blue");
+                        Scanner scanner = new Scanner(System.in);
+                        int newColorIndex = scanner.nextInt();
+                        Color newColor = Color.values()[newColorIndex];
+                        selectedCard.setColor(newColor);
+                    }
+
+                    // Handle special cards
+                    handleSpecialCards(selectedCard);
+
+                    // Break out of the loop, valid card played
+                    validCardPlayed = true;
+                } else {
+                    // Card is not playable, ask the player to retry
+                    System.out.println("Invalid card! Please choose a card with matching color or number.");
+                    // Player cannot play, draw a card
+                    Card drawnCard = deck.drawCard();
+                    currentPlayer.addCardToHand(drawnCard);
+                    discardPile.add(drawnCard);
+                    System.out.println("Drawing a card: " + drawnCard);
+                }
+
+                // Move to the next Player
+                updateCurrentPlayerIndex();
+
+                // Check for UNO call and update direction if necessary
+                handleUNOCall(currentPlayer);
+                updateDirection();
+            }
     }
-    
+}
+
     /**
      * Checks if a card is playable on the discard pile based on color, number, or type of card.
      *
@@ -153,6 +157,11 @@ public class UNOGame extends Game{
      */
     private boolean isPlayable(Card card, Card topCard) {
         // Implement the logic to check if a card is playable on the discard pile
+        // The condition when the topCard is null (i.e. when the player is playing for the first time in the very first round)
+        if (topCard == null) {
+            return true;
+        }
+
         Color topColor = topCard.getColor();
         Value topValue = topCard.getValue();
         Color cardColor = card.getColor();
@@ -173,6 +182,18 @@ public class UNOGame extends Game{
     }
     
     /**
+     * Gets the next player in the turn order after the current player.
+     *
+     * @return the next player in line after the current player.
+     */
+    private Player getNextPlayer() {
+        // Calculate the index of the next player by incrementing the current player index and wrapping around if needed
+        int nextPlayerIndex = (currentPlayerIndex + 1) % getPlayers().size();
+        // Return the player at the calculated index
+        return getPlayers().get(nextPlayerIndex);
+    }
+ 
+    /**
      * Gets the top card on the discard pile.
      *
      * @return the top card on the discard pile, or null if the discard pile is empty.
@@ -186,17 +207,51 @@ public class UNOGame extends Game{
     
     /**
      * Prompts the player to select a card index from their hand to play.
+     * If there's no playable card in the hand, a random card is drawn from the deck and added to the hand.
      *
-     * @param player the player whose turn it is.
+     * @param player   the player whose turn it is.
+     * @param topCard  the top card on the discard pile.
+     * @param deck     the deck from which to draw a card if needed.
+     * @param discardPile the discard pile to add the drawn card if needed.
      * @return the index of the card selected by the player.
      */
-    private int selectCardIndex(Player player) {
-        // Implement the logic to prompt the player to select a card from their hand
-        // For simplicity, let's assume the player enters a valid index
+    private int selectCardIndex(Player player, Card topCard, Deck deck, ArrayList<Card> discardPile) {
+        // Get the player's hand
+        ArrayList<Card> hand = player.getHand();
+
+        // Check if there's a playable card in the hand
+        boolean hasPlayableCard = false;
+        for (int i = 0; i < hand.size(); i++) {
+            Card card = hand.get(i);
+            if (isPlayable(card, topCard)) {
+                hasPlayableCard = true;
+                break;
+            }
+        }
+
+        // If no playable card, draw a random card from the deck and add it to the hand
+        if (!hasPlayableCard) {
+            while (true){
+            Card drawnCard = deck.drawCard();
+            player.addCardToHand(drawnCard);
+            discardPile.add(drawnCard);
+            System.out.println("No playable card in hand. Drawing a card: " + drawnCard);
+                
+            // Printing the updated player's hand
+            System.out.println("Your Hand after drawing: " + player.getHand());
+
+            if (isPlayable(drawnCard, topCard)) {
+                break;
+            }
+        }
+    }        
+        // Prompt the player to select a card from their hand
         System.out.println("Enter the index of the card you want to play: ");
         Scanner scanner = new Scanner(System.in);
         return scanner.nextInt();
     }
+
+
     
     /**
      * Handles the effects of special cards (Skip, Reverse, Draw Two, Wild Draw Four) when played.
@@ -208,30 +263,28 @@ public class UNOGame extends Game{
         // You may need to update currentPlayerIndex, direction, and handle drawing cards for Draw Two and Wild Draw Four.
         
         switch (card.getValue()) {
-        case SKIP:
-            updateCurrentPlayerIndex();
-            break;
-        case REVERSE:
-            reverse = !reverse;
-            updateCurrentPlayerIndex();
-            break;
-        case DRAW_TWO:
-            Player nextPlayerDrawTwo = getCurrentPlayer();
-            updateCurrentPlayerIndex();
-            Player nextPlayerDrawTwoAgain = getCurrentPlayer();
-            nextPlayerDrawTwo.drawCard(deck);
-            nextPlayerDrawTwoAgain.drawCard(deck);
-            break;
-        case WILD_DRAW_FOUR:
-            Player nextPlayerWildDrawFour = getCurrentPlayer();
-            updateCurrentPlayerIndex();
-            Player nextPlayerWildDrawFourAgain = getCurrentPlayer();
-            nextPlayerWildDrawFour.drawCard(deck);
-            nextPlayerWildDrawFour.drawCard(deck);
-            nextPlayerWildDrawFour.drawCard(deck);
-            nextPlayerWildDrawFourAgain.drawCard(deck);
-            break;
-    }
+            case SKIP:
+                updateCurrentPlayerIndex();
+                break;
+            case REVERSE:
+                reverse = !reverse;
+                updateCurrentPlayerIndex();
+                break;
+            case DRAW_TWO:
+                Player nextPlayerDrawTwo = getNextPlayer();
+                nextPlayerDrawTwo.drawCard(deck);
+                nextPlayerDrawTwo.drawCard(deck);
+                updateCurrentPlayerIndex();
+                break;
+            case WILD_DRAW_FOUR:
+                Player nextPlayerWildDrawFour = getNextPlayer();
+                nextPlayerWildDrawFour.drawCard(deck);
+                nextPlayerWildDrawFour.drawCard(deck);
+                nextPlayerWildDrawFour.drawCard(deck);
+                nextPlayerWildDrawFour.drawCard(deck);
+                updateCurrentPlayerIndex();
+                break;
+        }
     }
     
     /**

@@ -51,15 +51,27 @@ public abstract class Player {
      *
      * @param deck the deck from which the player will draw the card.
      */
-    public void drawCard(Deck deck) {
+    public Card drawCard(Deck deck) {
         Card card = deck.drawCard();
         if (card != null) {
-            hand.add(card);          
+            hand.add(card); 
+            return card;         
         } else {
             System.out.println("The deck is empty");
         }
+        return null;
     }
     
+    /**
+     * Adds a card to the player's hand.
+     *
+     * @param card the card to be added to the player's hand.
+     */
+    public void addCardToHand(Card card) {
+        hand.add(card);
+    }
+
+
     /**
      * Allows the player to play a card from their hand by providing the index of the card in their hand.
      *
